@@ -15,7 +15,7 @@ class OnPipeMessageListener implements ListenerInterface
     /**
      * @var ContainerInterface
      */
-    private $container;
+    private ContainerInterface $container;
 
     public function __construct(ContainerInterface $container)
     {
@@ -33,20 +33,13 @@ class OnPipeMessageListener implements ListenerInterface
         ];
     }
 
-    /**
-     * Handle the Event when the event is triggered, all listeners will
-     * complete before the event is returned to the EventDispatcher.
-     */
-    public function process(object $event)
-    {
+
+    public function process(object $event): void {
         if (($event instanceof OnPipeMessage || $event instanceof UserProcessPipeMessage) && $event->data instanceof PipeMessage) {
             $message = $event->data;
-            switch ($message->action) {
-                case PipeMessage::LOAD_POLICY:
-                    $this->container->get(Enforcer::class)->loadPolicy();
-                    break;
+            if ($message->action == PipeMessage::LOAD_POLICY) {
+                $this->container->get(Enforcer::class)->loadPolicy();
             }
         }
     }
-
 }

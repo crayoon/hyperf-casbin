@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Donjan\Casbin\Adapters\Mysql;
 
+use Casbin\Persist\Adapters\Filter;
 use Psr\Container\ContainerInterface;
 use Hyperf\Database\Schema\Schema;
 use Hyperf\Database\Schema\Blueprint;
-use Donjan\Casbin\Adapters\Mysql\Rule;
 use Hyperf\DbConnection\Db;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Casbin\Persist\Adapter;
@@ -18,6 +18,7 @@ use Casbin\Model\Model;
 use Casbin\Persist\AdapterHelper;
 use Casbin\Exceptions\InvalidFilterTypeException;
 use Donjan\Casbin\Event\PolicyChanged;
+use Throwable;
 
 /**
  * DatabaseAdapter.
@@ -27,45 +28,28 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
 
     use AdapterHelper;
 
-    /**
-     * @var bool
-     */
-    private $filtered = false;
+    private bool $filtered = false;
 
-    /**
-     * Rules eloquent model.
-     *
-     * @var Rule
-     */
-    protected $eloquent;
+    protected Rule $eloquent;
 
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * Db
-     * @var Db 
-     */
-    protected $db;
+    protected Db $db;
 
     /**
      * Db
      * @var EventDispatcherInterface 
      */
-    protected $eventDispatcher;
+    protected EventDispatcherInterface $eventDispatcher;
 
     /**
      * tableName
-     * @var tableName 
+     * @var string
      */
-    protected $tableName;
+    protected string $tableName;
 
     /**
      * the DatabaseAdapter constructor.
-     *
-     * @param Rule $eloquent
      */
     public function __construct(ContainerInterface $container, $tableName)
     {
@@ -97,7 +81,8 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
      * savePolicyLine function.
      *
      * @param string $ptype
-     * @param array  $rule
+     * @param array $rule
+     * @return array
      */
     public function savePolicyLine(string $ptype, array $rule)
     {
@@ -205,6 +190,7 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
      * @param string $sec
      * @param string $ptype
      * @param string[][] $rules
+     * @throws Throwable
      */
     public function removePolicies(string $sec, string $ptype, array $rules): void
     {
@@ -215,7 +201,7 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
             }
             $this->db->commit();
             $this->eventDispatcher->dispatch(new PolicyChanged(__METHOD__, func_get_args()));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->db->rollback();
             throw $e;
         }
@@ -269,12 +255,12 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
 
     /**
      * UpdatePolicies updates some policy rules to storage, like db, redis.
-     *
      * @param string $sec
      * @param string $ptype
-     * @param string[][] $oldRules
-     * @param string[][] $newRules
+     * @param array $oldRules
+     * @param array $newRules
      * @return void
+     * @throws Throwable
      */
     public function updatePolicies(string $sec, string $ptype, array $oldRules, array $newRules): void
     {
@@ -285,7 +271,7 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
             }
             $this->db->commit();
             $this->eventDispatcher->dispatch(new PolicyChanged(__METHOD__, func_get_args()));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->db->rollback();
             throw $e;
         }
@@ -293,13 +279,13 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
 
     /**
      * UpdateFilteredPolicies deletes old rules and adds new rules.
-     *
      * @param string $sec
      * @param string $ptype
      * @param array $newPolicies
-     * @param integer $fieldIndex
+     * @param int $fieldIndex
      * @param string ...$fieldValues
      * @return array
+     * @throws Throwable
      */
     public function updateFilteredPolicies(string $sec, string $ptype, array $newPolicies, int $fieldIndex, string ...$fieldValues): array
     {
@@ -323,7 +309,7 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
             $this->db->commit();
             $this->eventDispatcher->dispatch(new PolicyChanged(__METHOD__, func_get_args()));
             return $oldRules;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->db->rollback();
             throw $e;
         }
@@ -331,9 +317,10 @@ class DatabaseAdapter implements Adapter, BatchAdapter, UpdatableAdapter, Filter
 
     /**
      * Loads only policy rules that match the filter.
-     *
      * @param Model $model
-     * @param mixed $filter
+     * @param $filter
+     * @return void
+     * @throws InvalidFilterTypeException
      */
     public function loadFilteredPolicy(Model $model, $filter): void
     {

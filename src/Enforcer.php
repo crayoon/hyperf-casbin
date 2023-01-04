@@ -34,19 +34,8 @@ use Hyperf\Utils\ApplicationContext;
  */
 class Enforcer
 {
-
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
-
-    /**
-     *
-     * @param \Psr\Container\ContainerInterface $container
-     */
-    public function __construct(ContainerInterface $container)
+    public function __construct(protected ContainerInterface $container)
     {
-        $this->container = $container;
     }
 
     public function __call($method, $parameters)
@@ -54,14 +43,7 @@ class Enforcer
         return $this->container->get(BaseEnforcer::class)->{$method}(...$parameters);
     }
 
-    /**
-     *
-     * @param string $method
-     * @param array  $parameters
-     *
-     * @return mixed
-     */
-    public static function __callStatic($method, $parameters)
+    public static function __callStatic(string $method, array $parameters)
     {
         return ApplicationContext::getContainer()->get(BaseEnforcer::class)->{$method}(...$parameters);
     }

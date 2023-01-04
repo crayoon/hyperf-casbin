@@ -7,10 +7,10 @@ class PipeMessage
 
     const LOAD_POLICY = 'loadPolicy';
 
-    protected $data = [];
-    protected $action;
+    protected mixed $data = [];
+    protected string $action;
 
-    public function __construct($action, $data = [])
+    public function __construct(string $action, $data = [])
     {
         $this->action = $action;
         $this->data = $data;

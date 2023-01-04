@@ -5,7 +5,7 @@ namespace Donjan\Casbin\Event;
 class PolicyChanged
 {
 
-    protected $data = [];
+    protected array $data = [];
 
     public function __construct(...$data)
     {

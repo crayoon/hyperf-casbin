@@ -18,24 +18,19 @@ class RedisWatcher implements Watcher
     /**
      * @var ContainerInterface
      */
-    private $container;
+    private ContainerInterface $container;
 
     /**
      * @var Redis
      */
-    private $pubRedis;
+    private Redis $pubRedis;
 
     /**
      * channel
      */
-    private $channel;
+    private string $channel;
 
-    /**
-     * the DatabaseAdapter constructor.
-     *
-     * @param string $channel
-     */
-    public function __construct(ContainerInterface $container, $channel)
+    public function __construct(ContainerInterface $container, string $channel)
     {
         $this->channel = $channel;
         $this->container = $container;
